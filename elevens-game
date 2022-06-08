@@ -1,0 +1,120 @@
+import java.util.List;
+import java.util.ArrayList;
+public class ElevensBoard extends Board {
+	private static final int BOARD_SIZE = 9;
+	private static final String[] RANKS =
+		{"ace", "2", "3", "4", "5", "6", "7", "8", "9", "10", "jack", "queen", "king"};
+	private static final String[] SUITS =
+		{"spades", "hearts", "diamonds", "clubs"};
+	private static final int[] POINT_VALUES =
+		{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 0, 0, 0};
+    
+	 public ElevensBoard() {
+	 	super(BOARD_SIZE, RANKS, SUITS, POINT_VALUES);
+	 }
+
+	public boolean isLegal(List<Integer> selectedCards) {
+		if (selectedCards.size() == 2) {
+			return (findPairSum11(selectedCards).size() == 2);
+		} else if (selectedCards.size() == 3) {
+			return findJQK(selectedCards).size() != 0;
+		} else {
+			return false;
+		}
+	}
+
+	public boolean anotherPlayIsPossible() {
+		List<Integer> cIndexes = cardIndexes();
+		return (findPairSum11(cIndexes).size() > 0) || (findJQK(cIndexes).size() != 0);
+	}
+
+	private List<Integer> findPairSum11(List<Integer> selectedCards) {
+		List<Integer> list = new ArrayList<Integer>();
+		for (int sk1 = 0; sk1 < selectedCards.size(); sk1++) {
+			int k1 = selectedCards.get(sk1).intValue();
+			for (int sk2 = sk1 + 1; sk2 < selectedCards.size(); sk2++) {
+				int k2 = selectedCards.get(sk2).intValue();
+				if (cardAt(k1).pointValue() + cardAt(k2).pointValue() == 11) {
+					list.add(k1);
+					list.add(k2);
+					break;
+				}
+			}
+			if (list.size() == 2) {
+				break;
+			}
+		}
+		return list;
+	}
+
+	private List<Integer> findJQK(List<Integer> selectedCards) {
+		List<Integer> three = new ArrayList<Integer>();
+		boolean foundJack = false;
+		boolean foundQueen = false;
+		boolean foundKing = false;
+		for (Integer kObj : selectedCards) {
+			int k = kObj.intValue();
+			if (cardAt(k).rank().equals("jack") && !foundJack) {
+				foundJack = true;
+				three.add(k);
+			} else if (cardAt(k).rank().equals("queen") && !foundQueen) {
+				foundQueen = true;
+				three.add(k);
+			} else if (cardAt(k).rank().equals("king") && !foundKing) {
+				foundKing = true;
+				three.add(k);
+			}
+			
+			if (foundJack && foundQueen && foundKing) {
+				break;
+			}
+			
+		}
+		
+		if (three.size() < 3) {
+			three.clear();
+		}
+		
+		return three;
+
+	}
+
+	public boolean playIfPossible() {
+		List<Integer> indexes = cardIndexes();
+		if (anotherPlayIsPossible()) {
+			if (findPairSum11(indexes).size() == 2) {
+				playPairSum11IfPossible();
+			} else if (findJQK(indexes).size() == 3) {
+				playJQKIfPossible();
+			}
+			return true;
+		}
+		
+		return false; 
+	}
+
+
+	private boolean playPairSum11IfPossible() {
+		 List<Integer> indexes = cardIndexes();
+		 List<Integer> pair = findPairSum11(indexes);
+		 if (pair.size() == 2) {
+			 replaceSelectedCards(pair);
+			 return true;
+		 }
+		 
+		 return false; 
+	}
+
+
+	private boolean playJQKIfPossible() {
+		List<Integer> indexes = cardIndexes();
+		List<Integer> pair = findJQK(indexes);
+		 
+		if (pair.size() == 3) {
+			replaceSelectedCards(pair);
+			return true;
+		}
+		 
+		return false; 
+	}
+}
